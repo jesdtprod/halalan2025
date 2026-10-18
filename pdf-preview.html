@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Province Vote Breakdown • PDF Report Preview</title>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #0f172a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #f8fafc;
+    }
+    .header-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .tab-group {
+      display: flex;
+      gap: 8px;
+      background: rgba(30, 41, 59, 0.7);
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .tab-btn {
+      background: transparent;
+      color: #94a3b8;
+      border: none;
+      padding: 7px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tab-btn:hover {
+      color: #f8fafc;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .tab-btn.is-active {
+      color: #ffffff;
+      background: #047857;
+      box-shadow: 0 2px 8px rgba(4, 120, 87, 0.4);
+    }
+    #canvas-container {
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      background: white;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    canvas { display: block; max-width: 100%; height: auto; }
+  </style>
+</head>
+<body>
+  <div class="header-bar">
+    <h1>Botong Bangsamoro 2026 • Executive Breakdown PDF Engine Preview</h1>
+    <div class="tab-group">
+      <button type="button" class="tab-btn" data-cat="party">1. Regional (Provinces)</button>
+      <button type="button" class="tab-btn is-active" data-cat="muni-chunk">2. Municipal (14 LGUs Chunked Below)</button>
+      <button type="button" class="tab-btn" data-cat="er-barangays">3. Election Returns (Barangay Pages)</button>
+      <button type="button" class="tab-btn" data-cat="local-governor">4. Local Results (Governor - Bagumbayan)</button>
+    </div>
+    <div id="page-nav" style="display: flex; gap: 10px; align-items: center; margin-top: 6px;">
+      <button id="prev-page-btn" class="tab-btn" style="padding: 4px 12px; font-size: 12px;">&larr; Prev Page</button>
+      <span id="page-counter" style="font-size: 13px; font-weight: 600; color: #94a3b8;">Page 1 of 1</span>
+      <button id="next-page-btn" class="tab-btn" style="padding: 4px 12px; font-size: 12px;">Next Page &rarr;</button>
+    </div>
+    <div id="error-box" style="display: none; background: #7f1d1d; color: #fecaca; padding: 10px 18px; border-radius: 6px; font-size: 13px; margin-bottom: 12px; max-width: 900px; word-break: break-all;"></div>
+  </div>
+
+  <div id="canvas-container" style="width: 100%; max-width: 1100px; display: flex; justify-content: center;">
+    <iframe id="pdf-frame" style="width: 100%; height: 780px; border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; background: white;" title="PDF Preview"></iframe>
+  </div>
+
+  <script type="module">
+    import { loadDashboardSnapshot } from "./supabase-dashboard.js";
+    import { generateBreakdownPdfDoc } from "./breakdown-pdf-export.js";
+
+    let snapshotData = null;
+    let currentCategory = "muni-chunk";
+
+    function showError(err) {
+      console.error(err);
+      const box = document.getElementById("error-box");
+      if (box) {
+        box.style.display = "block";
+        box.textContent = "Error: " + (err.message || String(err));
+      }
+    }
+
+    async function generateAndRenderPdf(cat) {
+      if (!snapshotData) {
+        const res = await loadDashboardSnapshot();
+        snapshotData = res.snapshot;
+      }
+
+      const breakdown = snapshotData.province_breakdown;
+      const provinces = breakdown?.provinces || [];
+
+      let doc;
+      if (cat === "party") {
+        const rows = [...(breakdown.party_list || [])].sort((a, b) => Number(b.total || 0) - Number(a.total || 0));
+        doc = await generateBreakdownPdfDoc({
+          reportTitle: "Political Party Vote Breakdown",
+          subtitle: "Bangsamoro Parliamentary Elections 2026 • Official Party-List Tabulation by Province",
+          scopeLabel: "Party-List Tabulation",
+          tableTitle: "Political Party Vote Breakdown",
+          categoryKey: "party_list",
+          rows,
+          columns: provinces.map((p) => ({ label: p, value: (r) => r.province_votes?.[p] })),
+        });
+      } else if (cat === "muni-chunk") {
+        // Test 14 Municipalities (exceeds 6-7 column threshold, extends below!)
+        const munis = [
+          "Lamitan City", "Maluso", "Sumisip", "Tipo-Tipo", "Tuburan", "Ungkaya Pukan",
+          "Al-Barka", "Hadji Mohammad Ajul", "Akbar", "Hadji Muhtamad", "Tabuan-Lasa",
+          "Isabela City", "Lantawan", "Basilan East"
+        ];
+        const rawPartyRows = [...(breakdown.party_list || [])].slice(0, 5);
+        const rows = rawPartyRows.map((r, idx) => ({
+          name: r.name,
+          total: Number(r.total || 0),
+          municipality_votes: Object.fromEntries(munis.map((m, mIdx) => [m, Math.round(Number(r.total || 1000) / (mIdx + 2))])),
+        }));
+
+        doc = await generateBreakdownPdfDoc({
+          reportTitle: "Political Party Vote Breakdown",
+          subtitle: "Bangsamoro Parliamentary Elections 2026 • Official Party-List Tabulation by City/Municipality (Basilan)",
+          scopeLabel: "BASILAN MUNICIPAL RETURNS",
+          tableTitle: "Political Party Vote Breakdown",
+          categoryKey: "party_list",
+          province: "Basilan",
+          rows,
+          columns: munis.map((m) => ({ label: m, value: (r) => r.municipality_votes?.[m] })),
+        });
+      } else if (cat === "er-barangays") {
+        // Test Election Returns by Barangay: Barangay Poblacion (Page 1) and Barangay Bagua (Page 2)
+        const rawPartyRows = [...(breakdown.party_list || [])].slice(0, 6);
+        const barangayGroups = [
+          {
+            name: "Barangay Poblacion 1",
+            columns: [
+              { label: "0001A", value: (r) => Math.round(Number(r.total || 500) * 0.12) },
+              { label: "0001B", value: (r) => Math.round(Number(r.total || 500) * 0.15) },
+              { label: "0002A", value: (r) => Math.round(Number(r.total || 500) * 0.18) },
+              { label: "0002B", value: (r) => Math.round(Number(r.total || 500) * 0.14) },
+            ],
+          },
+          {
+            name: "Barangay Bagua 2",
+            columns: [
+              { label: "0010A", value: (r) => Math.round(Number(r.total || 500) * 0.11) },
+              { label: "0010B", value: (r) => Math.round(Number(r.total || 500) * 0.16) },
+              { label: "0011A", value: (r) => Math.round(Number(r.total || 500) * 0.09) },
+            ],
+          },
+          {
+            name: "Barangay Rosary Heights 3",
+            columns: [
+              { label: "0020A", value: (r) => Math.round(Number(r.total || 500) * 0.22) },
+              { label: "0020B", value: (r) => Math.round(Number(r.total || 500) * 0.19) },
+              { label: "0021A", value: (r) => Math.round(Number(r.total || 500) * 0.13) },
+            ],
+          },
+        ];
+
+        doc = await generateBreakdownPdfDoc({
+          reportTitle: "Political Party Election Returns",
+          subtitle: "Bangsamoro Parliamentary Elections 2026 • Official Clustered Precinct Tabulation by Barangay (Cotabato City, Maguindanao del Norte)",
+          scopeLabel: "COTABATO CITY ELECTION RETURNS",
+          tableTitle: "Political Party Election Returns",
+          categoryKey: "party_list",
+          province: "Maguindanao del Norte",
+          municipality: "Cotabato City",
+          rows: rawPartyRows,
+          groups: barangayGroups,
+        });
+      } else if (cat === "local-governor") {
+        doc = await generateBreakdownPdfDoc({
+          reportTitle: "Halalan 2025 - Election Results",
+          subtitle: "2025 National and Local Elections | Local Results | Official COC totals",
+          scopeLabel: "GOVERNOR",
+          tableTitle: "PROVINCIAL GOVERNOR OF SULTAN KUDARAT",
+          categoryKey: "local",
+          province: "Sultan Kudarat",
+          municipality: "Bagumbayan",
+          winningSeats: 1,
+          rows: [
+            { name: "2. MANGUDADATU, DATU PAX (LAKAS)", total: 25824, rank: 1, share: "83.29%", ballot: "2", isWinner: true },
+            { name: "3. MANGUDADATU, SHARIFA (PFP)", total: 3054, rank: 2, share: "9.85%", ballot: "3", isWinner: false },
+            { name: "4. SAKALURAN, RADEN (IND)", total: 1356, rank: 3, share: "4.37%", ballot: "4", isWinner: false },
+            { name: "1. CALVO, DRA. INDAY NELREY (IND)", total: 770, rank: 4, share: "2.48%", ballot: "1", isWinner: false },
+          ],
+          columns: [{ label: "Ballot No.", value: (r) => r.ballot, total: false }],
+        });
+      }
+
+      try {
+        const blobUrl = doc.output("bloburl");
+        const frame = document.getElementById("pdf-frame");
+        if (frame) frame.src = blobUrl;
+      } catch (err) {
+        showError(err);
+      }
+    }
+
+    document.querySelectorAll(".tab-btn[data-cat]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn[data-cat]").forEach((b) => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+        currentCategory = btn.dataset.cat;
+        generateAndRenderPdf(currentCategory).catch(showError);
+      });
+    });
+
+    generateAndRenderPdf(currentCategory).catch(showError);
+  </script>
+</body>
+</html>

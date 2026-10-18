@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="2025 local election results for Sultan Kudarat, Maguindanao del Norte and Maguindanao del Sur" />
+    <title>Halalan 2025 | Local Election Results</title>
+    <link rel="icon" type="image/webp" href="assets/halalan2025-logo.webp" />
+    <link rel="apple-touch-icon" href="assets/halalan2025-logo.webp" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=20261018-v2" />
+    <link rel="stylesheet" href="local-results.css?v=20261018-align" />
+    <script src="assets/lucide.min.js"></script>
+    <script src="assets/jspdf.umd.min.js"></script>
+    <script src="assets/jspdf.plugin.autotable.min.js"></script>
+  </head>
+  <body>
+    <!-- Global Centralized Floating Toast Notification Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <main class="page-shell">
+      <!-- Top Brand Header -->
+      <header class="brand-header-card">
+        <div class="brand-identity">
+          <img class="brand-logo" src="assets/halalan2025-logo.webp" alt="Halalan 2025 logo" />
+          <div class="brand-titles">
+            <div class="badge-row">
+              <span class="eyebrow-badge">COMELEC 2025 JSON</span>
+              <span class="live-indicator"><span class="pulse-dot"></span>Official COC Data</span>
+            </div>
+            <h1 id="page-title">Halalan 2025</h1>
+            <p class="brand-subtitle">2025 National and Local Elections • Local Results</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="refresh-btn" class="btn btn-outline" type="button" title="Reload live snapshot data">
+            <i data-lucide="refresh-cw" class="btn-icon"></i>
+            <span class="btn-text">Refresh Data</span>
+          </button>
+          <button id="info-modal-btn" class="btn btn-secondary" type="button" title="View snapshot source details">
+            <i data-lucide="info" class="btn-icon"></i>
+            <span>Source Info</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- KPI Metric Cards Grid - Color-themed directly from Halalan 2025 logo -->
+      <section class="kpi-grid" aria-label="Election Key Metrics">
+        <!-- 1. Blue Card: Flag Royal Blue from Logo -->
+        <article class="kpi-card kpi-blue" id="kpi-returns">
+          <div class="kpi-top">
+            <span class="kpi-label">Registered Voters</span>
+            <span class="kpi-icon-pill" aria-hidden="true">
+              <i data-lucide="users"></i>
+            </span>
+          </div>
+          <div class="kpi-value skeleton skeleton-text" id="kpi-returns-val">...</div>
+          <div class="kpi-subtext" id="kpi-returns-sub">Across published ERs</div>
+        </article>
+
+        <!-- 2. Gold Card: Radiant Sun & Stars from Logo -->
+        <article class="kpi-card kpi-gold" id="kpi-total-votes">
+          <div class="kpi-top">
+            <span class="kpi-label">Total Cast Votes</span>
+            <span class="kpi-icon-pill" aria-hidden="true">
+              <i data-lucide="vote"></i>
+            </span>
+          </div>
+          <div class="kpi-value skeleton skeleton-text" id="kpi-votes-val">...</div>
+          <div class="kpi-subtext" id="kpi-votes-sub">Registered voter turnout</div>
+        </article>
+
+        <!-- 3. Red Card: Vibrant Red Ribbon from Logo -->
+        <article class="kpi-card kpi-red" id="kpi-leader">
+          <div class="kpi-top">
+            <span class="kpi-label" id="kpi-leader-label">Published ERs</span>
+            <span class="kpi-icon-pill" aria-hidden="true">
+              <i data-lucide="badge-check"></i>
+            </span>
+          </div>
+          <div class="kpi-value skeleton skeleton-text" id="kpi-leader-val">...</div>
+          <div class="kpi-subtext" id="kpi-leader-share">Published / expected ERs</div>
+        </article>
+
+        <!-- 4. Deep Navy Blue Card: ABS-CBN & Fingerprint Emblem from Logo -->
+        <article class="kpi-card kpi-blue-dark" id="kpi-parties">
+          <div class="kpi-top">
+            <span class="kpi-label" id="kpi-participants-label">Entries</span>
+            <span class="kpi-icon-pill" aria-hidden="true">
+              <i data-lucide="layers"></i>
+            </span>
+          </div>
+          <div class="kpi-value skeleton skeleton-text" id="kpi-parties-val">...</div>
+          <div class="kpi-subtext" id="kpi-participants-sub">Selected geographic scope</div>
+        </article>
+      </section>
+
+      <section class="result-section" aria-labelledby="result-title">
+        <div class="section-top-bar">
+          <div class="section-heading-group">
+            <div class="section-title-wrap">
+              <h2 id="result-title">Sultan Kudarat &middot; Local Results</h2>
+              <span id="cache-status" class="cache-status">
+                <span class="status-dot"></span> Official COC Data
+              </span>
+            </div>
+            <p id="result-message" class="result-message" role="status">Loading official COMELEC JSON...</p>
+          </div>
+          <div class="table-actions section-controls-toolbar">
+            <!-- Row 1: Dropdown Selectors (Balanced side-by-side) -->
+            <div class="smooth-dropdown-bar" role="toolbar" aria-label="Geographic filter dropdowns">
+              <div class="smooth-dropdown" data-type="province">
+                <span class="smooth-dropdown-icon"><i data-lucide="map-pin"></i></span>
+                <span class="smooth-dropdown-label">Province</span>
+                <select id="province-select" class="smooth-select" aria-label="Select province">
+                  <option value="6500000">Sultan Kudarat</option>
+                  <option value="8700000">Maguindanao del Norte</option>
+                  <option value="8800000">Maguindanao del Sur</option>
+                </select>
+                <i data-lucide="chevron-down" class="smooth-dropdown-chevron"></i>
+              </div>
+              <div class="smooth-dropdown" data-type="municipality">
+                <span class="smooth-dropdown-icon" style="background:var(--brand-primary-light);color:var(--brand-primary);"><i data-lucide="building-2"></i></span>
+                <span class="smooth-dropdown-label">City/Municipality</span>
+                <select id="municipality-select" class="smooth-select" aria-label="Select city or municipality">
+                  <option value="all">All cities / municipalities</option>
+                </select>
+                <i data-lucide="chevron-down" class="smooth-dropdown-chevron"></i>
+              </div>
+              <div class="smooth-dropdown" id="barangay-field" data-type="barangay" hidden>
+                <span class="smooth-dropdown-icon" style="background:var(--brand-red-light);color:var(--brand-red);"><i data-lucide="home"></i></span>
+                <span class="smooth-dropdown-label">Barangay</span>
+                <select id="barangay-select" class="smooth-select" aria-label="Select barangay">
+                  <option value="all">All barangays</option>
+                </select>
+                <i data-lucide="chevron-down" class="smooth-dropdown-chevron"></i>
+              </div>
+            </div>
+            <!-- Row 2: Search Fullwidth with Download JSON -->
+            <div class="search-action-row">
+              <div class="search-box">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="search" id="candidate-search" placeholder="Search candidate, contest, or position..." aria-label="Search candidates or contests" />
+              </div>
+              <button id="download-json" class="btn btn-download-json" type="button" title="Download snapshot JSON">
+                <i data-lucide="download" class="btn-icon"></i>
+                <span>Download JSON</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <p id="coverage-warning" class="coverage-warning" role="status" hidden></p>
+        <div id="groups-container" class="groups-container" aria-live="polite">
+          <article class="group-card card-pos-governor">
+            <header class="group-card-header">
+              <div class="group-header-title-block">
+                <div class="group-badge-row">
+                  <span class="skeleton local-position pos-badge-governor" style="width:96px;height:20px;border-radius:9999px;"></span>
+                  <span class="skeleton seats-pill" style="width:96px;height:20px;border-radius:9999px;"></span>
+                </div>
+                <div class="skeleton" style="width:320px;max-width:85%;height:22px;border-radius:6px;margin-top:2px;"></div>
+              </div>
+              <div class="group-header-stats">
+                <span class="skeleton stat-pill" style="width:105px;height:32px;border-radius:6px;"></span>
+                <span class="skeleton btn" style="width:105px;height:32px;border-radius:6px;"></span>
+                <span class="skeleton btn" style="width:34px;height:32px;border-radius:6px;"></span>
+                <span class="skeleton btn" style="width:34px;height:32px;border-radius:6px;"></span>
+              </div>
+            </header>
+            <div class="table-wrap">
+              <table class="results-table">
+                <thead>
+                  <tr>
+                    <th scope="col" class="ballot-col">NO.</th>
+                    <th scope="col" class="rank-col">RANK</th>
+                    <th scope="col">CANDIDATE</th>
+                    <th scope="col" class="share-col">VOTE SHARE</th>
+                    <th scope="col" class="votes-column">TOTAL VOTES</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="skeleton-row">
+                    <td class="ballot-col"><span class="skeleton" style="width:26px;height:24px;border-radius:6px;display:inline-block;"></span></td>
+                    <td class="rank-col"><span class="skeleton" style="width:25px;height:25px;border-radius:50%;display:inline-block;"></span></td>
+                    <td class="party-cell"><div class="candidate-cell-wrap" style="display:flex;flex-direction:column;gap:5px;"><span class="skeleton" style="width:170px;max-width:80%;height:15px;border-radius:4px;"></span><span class="skeleton" style="width:70px;max-width:50%;height:13px;border-radius:9999px;"></span></div></td>
+                    <td class="share-col"><div class="share-cell" style="display:flex;align-items:center;gap:10px;"><span class="skeleton" style="width:48px;height:16px;border-radius:4px;flex-shrink:0;"></span><span class="skeleton" style="width:1in;height:8px;border-radius:9999px;flex-shrink:0;"></span></div></td>
+                    <td class="votes-column vote-total"><span class="skeleton" style="width:75px;height:18px;border-radius:4px;display:inline-block;"></span></td>
+                  </tr>
+                  <tr class="skeleton-row">
+                    <td class="ballot-col"><span class="skeleton" style="width:26px;height:24px;border-radius:6px;display:inline-block;"></span></td>
+                    <td class="rank-col"><span class="skeleton" style="width:25px;height:25px;border-radius:50%;display:inline-block;"></span></td>
+                    <td class="party-cell"><div class="candidate-cell-wrap" style="display:flex;flex-direction:column;gap:5px;"><span class="skeleton" style="width:150px;max-width:80%;height:15px;border-radius:4px;"></span><span class="skeleton" style="width:65px;max-width:50%;height:13px;border-radius:9999px;"></span></div></td>
+                    <td class="share-col"><div class="share-cell" style="display:flex;align-items:center;gap:10px;"><span class="skeleton" style="width:48px;height:16px;border-radius:4px;flex-shrink:0;"></span><span class="skeleton" style="width:1in;height:8px;border-radius:9999px;flex-shrink:0;"></span></div></td>
+                    <td class="votes-column vote-total"><span class="skeleton" style="width:70px;height:18px;border-radius:4px;display:inline-block;"></span></td>
+                  </tr>
+                  <tr class="skeleton-row">
+                    <td class="ballot-col"><span class="skeleton" style="width:26px;height:24px;border-radius:6px;display:inline-block;"></span></td>
+                    <td class="rank-col"><span class="skeleton" style="width:25px;height:25px;border-radius:50%;display:inline-block;"></span></td>
+                    <td class="party-cell"><div class="candidate-cell-wrap" style="display:flex;flex-direction:column;gap:5px;"><span class="skeleton" style="width:160px;max-width:80%;height:15px;border-radius:4px;"></span><span class="skeleton" style="width:60px;max-width:50%;height:13px;border-radius:9999px;"></span></div></td>
+                    <td class="share-col"><div class="share-cell" style="display:flex;align-items:center;gap:10px;"><span class="skeleton" style="width:48px;height:16px;border-radius:4px;flex-shrink:0;"></span><span class="skeleton" style="width:1in;height:8px;border-radius:9999px;flex-shrink:0;"></span></div></td>
+                    <td class="votes-column vote-total"><span class="skeleton" style="width:68px;height:18px;border-radius:4px;display:inline-block;"></span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+          <article class="group-card card-pos-vice-governor">
+            <header class="group-card-header">
+              <div class="group-header-title-block">
+                <div class="group-badge-row">
+                  <span class="skeleton local-position pos-badge-vice-governor" style="width:115px;height:20px;border-radius:9999px;"></span>
+                  <span class="skeleton seats-pill" style="width:96px;height:20px;border-radius:9999px;"></span>
+                </div>
+                <div class="skeleton" style="width:340px;max-width:85%;height:22px;border-radius:6px;margin-top:2px;"></div>
+              </div>
+              <div class="group-header-stats">
+                <span class="skeleton stat-pill" style="width:105px;height:32px;border-radius:6px;"></span>
+                <span class="skeleton btn" style="width:105px;height:32px;border-radius:6px;"></span>
+                <span class="skeleton btn" style="width:34px;height:32px;border-radius:6px;"></span>
+                <span class="skeleton btn" style="width:34px;height:32px;border-radius:6px;"></span>
+              </div>
+            </header>
+            <div class="table-wrap">
+              <table class="results-table">
+                <thead>
+                  <tr>
+                    <th scope="col" class="ballot-col">NO.</th>
+                    <th scope="col" class="rank-col">RANK</th>
+                    <th scope="col">CANDIDATE</th>
+                    <th scope="col" class="share-col">VOTE SHARE</th>
+                    <th scope="col" class="votes-column">TOTAL VOTES</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="skeleton-row">
+                    <td class="ballot-col"><span class="skeleton" style="width:26px;height:24px;border-radius:6px;display:inline-block;"></span></td>
+                    <td class="rank-col"><span class="skeleton" style="width:25px;height:25px;border-radius:50%;display:inline-block;"></span></td>
+                    <td class="party-cell"><div class="candidate-cell-wrap" style="display:flex;flex-direction:column;gap:5px;"><span class="skeleton" style="width:170px;max-width:80%;height:15px;border-radius:4px;"></span><span class="skeleton" style="width:70px;max-width:50%;height:13px;border-radius:9999px;"></span></div></td>
+                    <td class="share-col"><div class="share-cell" style="display:flex;align-items:center;gap:10px;"><span class="skeleton" style="width:48px;height:16px;border-radius:4px;flex-shrink:0;"></span><span class="skeleton" style="width:1in;height:8px;border-radius:9999px;flex-shrink:0;"></span></div></td>
+                    <td class="votes-column vote-total"><span class="skeleton" style="width:75px;height:18px;border-radius:4px;display:inline-block;"></span></td>
+                  </tr>
+                  <tr class="skeleton-row">
+                    <td class="ballot-col"><span class="skeleton" style="width:26px;height:24px;border-radius:6px;display:inline-block;"></span></td>
+                    <td class="rank-col"><span class="skeleton" style="width:25px;height:25px;border-radius:50%;display:inline-block;"></span></td>
+                    <td class="party-cell"><div class="candidate-cell-wrap" style="display:flex;flex-direction:column;gap:5px;"><span class="skeleton" style="width:155px;max-width:80%;height:15px;border-radius:4px;"></span><span class="skeleton" style="width:65px;max-width:50%;height:13px;border-radius:9999px;"></span></div></td>
+                    <td class="share-col"><div class="share-cell" style="display:flex;align-items:center;gap:10px;"><span class="skeleton" style="width:48px;height:16px;border-radius:4px;flex-shrink:0;"></span><span class="skeleton" style="width:1in;height:8px;border-radius:9999px;flex-shrink:0;"></span></div></td>
+                    <td class="votes-column vote-total"><span class="skeleton" style="width:70px;height:18px;border-radius:4px;display:inline-block;"></span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+        <footer class="results-footer"><div class="footer-note">Official COMELEC certificates of canvass (COC). Vote share is per contest; rankings do not declare winners.</div><div class="footer-timestamp" id="footer-updated-time"></div></footer>
+      </section>
+    </main>
+
+    <!-- Source Info & Verification Modal -->
+    <div id="modal-backdrop" class="modal-backdrop" hidden>
+      <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <header class="modal-header">
+          <div class="modal-title-wrap">
+            <div class="modal-icon-badge">
+              <i data-lucide="shield-check"></i>
+            </div>
+            <div>
+              <h3 id="modal-title">Snapshot Source & Verification</h3>
+              <p class="modal-subtitle">COMELEC Election Return Data Integrity</p>
+            </div>
+          </div>
+          <button id="modal-close-btn" class="modal-close" type="button" aria-label="Close dialog">&times;</button>
+        </header>
+        <div class="modal-body">
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">Data Source</span>
+              <span class="detail-val" id="modal-source">Official COMELEC 2025 COC JSON</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Source JSON Files</span>
+              <span class="detail-val" id="modal-files">Loading...</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Snapshot Timestamp</span>
+              <span class="detail-val" id="modal-timestamp">Loading...</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Storage Type</span>
+              <span class="detail-val">Downloaded official 2025 JSON</span>
+            </div>
+          </div>
+          <p class="modal-text">
+            This dashboard reads downloaded JSON from the official 2025 COMELEC results website. Refresh reloads the saved snapshot; the download timestamp is not the election source update time.
+          </p>
+        </div>
+        <footer class="modal-footer">
+          <button id="modal-cancel-btn" class="btn btn-outline" type="button">Close</button>
+          <button id="modal-save-btn" class="btn btn-primary" type="button">
+            <span class="btn-label">Reload Snapshot</span>
+          </button>
+        </footer>
+      </div>
+    </div>
+
+    <div id="assistive-widget" class="assistive-widget">
+      <button id="assistive-touch" aria-expanded="false" aria-controls="assistive-menu" class="assistive-touch-btn" type="button" aria-label="Open Election Geography Menu" title="Drag to move, click to choose a breakdown">
+        <div class="assistive-touch-inner"><img class="assistive-touch-logo" src="assets/halalan2025-logo.webp" alt="Halalan 2025" draggable="false" /></div>
+      </button>
+      <div id="assistive-menu" class="assistive-menu" hidden role="dialog" aria-label="Election Navigation Menu"></div>
+    </div>
+    <script type="module" src="smooth-dropdown.js"></script>
+    <script type="module" src="local-results.js?v=20261018-v2"></script>
+    <script src="assistive-touch.js?v=20261018-v2"></script>
+  </body>
+</html>

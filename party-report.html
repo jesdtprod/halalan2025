@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Halalan 2025 • Election Results Report</title>
+    <link rel="icon" type="image/webp" href="assets/halalan2025-logo.webp" />
+    <link rel="apple-touch-icon" href="assets/halalan2025-logo.webp" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="party-report.css" />
+    <script src="assets/lucide.min.js"></script>
+  </head>
+  <body>
+    <!-- Global Centralized Floating Toast Notification Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <main class="report-shell">
+      <!-- Top Modern Header -->
+      <header class="report-header-card">
+        <div class="report-brand">
+          <img src="assets/halalan2025-logo.webp" alt="Halalan 2025 Logo" class="report-logo" />
+          <div>
+            <div class="report-badge-row">
+              <span class="eyebrow-badge">Official COMELEC Snapshot</span>
+              <span class="live-pill"><span class="pulse-dot"></span> Certified Report</span>
+            </div>
+            <h1 id="report-title">Election Results Report</h1>
+            <p id="report-generated" class="report-meta"></p>
+          </div>
+        </div>
+        <div class="report-header-actions">
+          <button id="print-report" class="btn-print" type="button" title="Print or Save PDF">
+            <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            <span>Print report</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- KPI Summary Cards (Matching Home Page Design) -->
+      <section class="kpi-grid" aria-label="Report summary">
+        <!-- 1. Blue Card: Visible Parties -->
+        <article class="kpi-card kpi-blue">
+          <div class="kpi-top">
+            <span class="kpi-label">Visible Candidates</span>
+            <span class="kpi-icon-pill" aria-hidden="true">
+              <i data-lucide="layers"></i>
+            </span>
+          </div>
+          <div class="kpi-value" id="party-count">0</div>
+          <div class="kpi-subtext">Filtered candidates</div>
+        </article>
+
+        <!-- 2. Gold Card: Visible Votes -->
+        <article class="kpi-card kpi-gold">
+          <div class="kpi-top">
+            <span class="kpi-label">Visible Votes</span>
+            <span class="kpi-icon-pill" aria-hidden="true">
+              <i data-lucide="vote"></i>
+            </span>
+          </div>
+          <div class="kpi-value" id="vote-total">0</div>
+          <div class="kpi-subtext">Sum of visible candidate votes</div>
+        </article>
+
+        <!-- 3. Red Card: Leading Candidate -->
+        <article class="kpi-card kpi-red">
+          <div class="kpi-top">
+            <span class="kpi-label">Leading Candidate</span>
+            <span class="kpi-icon-pill" aria-hidden="true">
+              <i data-lucide="award"></i>
+            </span>
+          </div>
+          <div class="kpi-value" id="leading-party">—</div>
+          <div class="kpi-subtext" id="leading-party-sub">Top vote receiver</div>
+        </article>
+      </section>
+
+      <!-- Big Vote Share Donut Chart Card -->
+      <section class="report-card chart-section">
+        <div class="section-heading">
+          <div class="section-title-wrap">
+            <span class="section-dot"></span>
+            <h2>Vote Share Distribution</h2>
+          </div>
+          <p class="section-subtitle">Visual representation of visible candidate standings and percentages</p>
+        </div>
+        <div id="vote-chart" class="vote-chart" role="img" aria-label="Visible candidate vote share chart"></div>
+      </section>
+
+      <!-- Report Footer -->
+      <footer class="report-footer">
+        <p>Official COMELEC Snapshot Data • Halalan 2025 National and Local Elections</p>
+      </footer>
+    </main>
+    <script type="module" src="party-report.js"></script>
+  </body>
+</html>
